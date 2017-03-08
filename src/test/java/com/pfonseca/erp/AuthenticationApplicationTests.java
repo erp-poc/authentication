@@ -35,7 +35,7 @@ public class AuthenticationApplicationTests {
 	@Test
 	public void homePageProtected() {
 		ResponseEntity<String> response = template.getForEntity("http://localhost:"
-				+ port + "/", String.class);
+				+ port + "/auth", String.class);
 		assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
 		String auth = response.getHeaders().getFirst("WWW-Authenticate");
 		assertTrue("Wrong header: " + auth, auth.startsWith("Bearer realm=\""));
@@ -44,7 +44,7 @@ public class AuthenticationApplicationTests {
 	@Test
 	public void userEndpointProtected() {
 		ResponseEntity<String> response = template.getForEntity("http://localhost:"
-				+ port + "/user", String.class);
+				+ port + "/auth/user", String.class);
 		assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
 		String auth = response.getHeaders().getFirst("WWW-Authenticate");
 		assertTrue("Wrong header: " + auth, auth.startsWith("Bearer realm=\""));
@@ -54,17 +54,17 @@ public class AuthenticationApplicationTests {
 	@Ignore
 	public void authorizationRedirects() {
 		ResponseEntity<String> response = template.getForEntity("http://localhost:"
-				+ port + "/oauth/authorize", String.class);
+				+ port + "/auth/oauth/authorize", String.class);
 		assertEquals(HttpStatus.FOUND, response.getStatusCode());
 		String location = response.getHeaders().getFirst("Location");
 		assertTrue("Wrong header: " + location,
-				location.startsWith("http://localhost:" + port + "/login"));
+				location.startsWith("http://localhost:" + port + "/auth/login"));
 	}
 
 	@Test
 	public void loginSucceeds() {
 		ResponseEntity<String> response = template.getForEntity("http://localhost:"
-				+ port + "/login", String.class);
+				+ port + "/auth/login", String.class);
 		String csrf = getCsrf(response.getBody());
 		MultiValueMap<String, String> form = new LinkedMultiValueMap<String, String>();
 		form.set("username", "user");
@@ -74,9 +74,9 @@ public class AuthenticationApplicationTests {
 		headers.put("COOKIE", response.getHeaders().get("Set-Cookie"));
 		RequestEntity<MultiValueMap<String, String>> request = new RequestEntity<MultiValueMap<String, String>>(
 				form, headers, HttpMethod.POST, URI.create("http://localhost:" + port
-						+ "/login"));
+						+ "/auth/login"));
 		ResponseEntity<Void> location = template.exchange(request, Void.class);
-		assertEquals("http://localhost:" + port + "/",
+		assertEquals("http://localhost:" + port + "/auth/",
 				location.getHeaders().getFirst("Location"));
 	}
 
